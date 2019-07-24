@@ -1,45 +1,56 @@
+/*
+ * Arduino library for TM1638 Board
+ * Written by Andrey Komrakov  komrakovaa at yandex.ru
+ */
+
+
 #include "tm1638.h"
 
 Tm1638::Tm1638(uint8_t _stbPin, uint8_t _clkPin, uint8_t _dataPin)
-    :stbPin(_stbPin), clkPin(_clkPin), dataPin(_dataPin)
+:stbPin(_stbPin), clkPin(_clkPin), dataPin(_dataPin)
 {
-    pinMode(stbPin, OUTPUT);
-    pinMode(clkPin, OUTPUT);
-    pinMode(dataPin, OUTPUT);
-    setBrightness( TM1638_BRIGHTNESS_DEFAULT );
+	pinMode(stbPin, OUTPUT);
+	pinMode(clkPin, OUTPUT);
+	pinMode(dataPin, OUTPUT);
+	setBrightness(TM1638_BRIGHTNESS_DEFAULT);
 
 #ifdef TM1638_FAST_SHIFTOUT && __AVR__
-  clkPort  = portOutputRegister(digitalPinToPort(clkPin));
-  clkBitMask = digitalPinToBitMask(clkPin);
-  
-  dataPort = portOutputRegister(digitalPinToPort(dataPin));
-  dataBitMask = digitalPinToBitMask(dataPin);
+	clkPort = portOutputRegister(digitalPinToPort(clkPin));
+	clkBitMask = digitalPinToBitMask(clkPin);
+
+	dataPort = portOutputRegister(digitalPinToPort(dataPin));
+	dataBitMask = digitalPinToBitMask(dataPin);
 #endif    
 }
 
 Tm1638::~Tm1638()
-{  
+{
 }
 
 void Tm1638::setBrightness(uint8_t value){
-    if( value == 0) {
-      sendCommand( TM1638_BRIGHTNESS_OFF );
-    } else {
-      sendCommand( TM1638_BRIGHTNESS_BASE + (value-1) );
-    }  
+	if (value == 0) {
+		sendCommand(TM1638_BRIGHTNESS_OFF);
+	}
+	else {
+		sendCommand(TM1638_BRIGHTNESS_BASE + (value - 1));
+	}
 }
 
-void Tm1638::setKeyPressCallback(void (*f)(uint8_t))
+void Tm1638::setKeyPressCallback(void(*f)(uint8_t))
 {
-  button_down = f;
+	button_down = f;
 }
 
 
-void Tm1638::setKeyReleaseCallback(void (*f)(uint8_t))
+void Tm1638::setKeyReleaseCallback(void(*f)(uint8_t))
 {
-  button_up = f;
+	button_up = f;
 }
 
+uint8_t Tm1638::getKeys()
+{
+	return tm1638_keys;
+}
 
 void Tm1638::sendCommand(uint8_t value)
 {
@@ -59,17 +70,30 @@ void Tm1638::setChar(uint8_t pos, char c){
 void Tm1638::displayNum(uint32_t num){
 	char buf[8];
 	sprintf(buf, "%8li", num);
-	for (uint8_t i = 0; i<8; i++)
+	for (uint8_t i = 0; i < 8; i++)
 	{
 		setChar(i + 1, buf[i]);
 	}
 }
 
 void Tm1638::displayStr(const char* str)
-{
-	for (uint8_t i = 0; i < strlen(str); i++){
+{  
+	uint8_t i;
+	
+	for ( i = 0; i < 8; i++){
+     setChar(i+1,' ');
+	}
+ 
+	for ( i = 0; i < strlen(str); i++){
 		setChar(i + 1, str[i]);
 	}
+}
+
+void Tm1638::clearAll()
+{
+    for ( uint8_t i = 0; i < 168; i++){
+      tm1638_reg_data[i] = 0;
+    }
 }
 
 uint8_t Tm1638::receive()
@@ -100,24 +124,24 @@ uint8_t Tm1638::receive()
 }
 
 void Tm1638::display() {
-	sendCommand(0x40);
+	sendCommand(TM1638_MODE_NORMAL);
 	digitalWrite(stbPin, LOW);
 	shiftOut(dataPin, clkPin, LSBFIRST, 0xC0);
 	for (uint8_t i = 0; i < 16; i++)
 	{
 #ifdef TM1638_FAST_SHIFTOUT && __AVR__
-		fastShiftOut(dataPin, clkPin,tm1638_reg_data[i]);
+		fastShiftOut(dataPin, clkPin, tm1638_reg_data[i]);
 #else
-    ShiftOut(dataPin, clkPin, LSBFIRST, tm1638_reg_data[i]);
+		shiftOut(dataPin, clkPin, LSBFIRST, tm1638_reg_data[i]);
 #endif    
 	}
 	digitalWrite(stbPin, HIGH);
 }
 
-void Tm1638::readKeys() {		
+void Tm1638::readKeys() {
 	tm1638_keys = 0;
 	digitalWrite(stbPin, LOW);
-	shiftOut(dataPin, clkPin, LSBFIRST, 0x42);
+	shiftOut(dataPin, clkPin, LSBFIRST, TM1638_MODE_KEY_READ);
 	for (uint8_t i = 0; i < 4; i++) {
 		tm1638_keys |= receive() << i;
 	}
@@ -130,36 +154,37 @@ void Tm1638::readKeys() {
 
 void Tm1638::processEvents(){
 	uint8_t pressed = 0;
-  uint8_t released = 0;  
-	
+	uint8_t released = 0;
+
 	for (uint8_t i = 0; i < 8; i++){
 		if (bitRead(tm1638_keys, i) && !bitRead(tm1638_keys_prev, i)) {
-        bitSet(pressed,i);
+			bitSet(pressed, i);
 		}
 
-    if (!bitRead(tm1638_keys, i) && bitRead(tm1638_keys_prev, i)) {
-        bitSet(released,i);
-    }   
+		if (!bitRead(tm1638_keys, i) && bitRead(tm1638_keys_prev, i)) {
+			bitSet(released, i);
+		}
 	}
-  if ((pressed !=0) && (button_down!=0)) (*button_down)(pressed);
-  if ((button_up !=0) && (button_up!=0)) (*button_up) (released);
+	if ((pressed != 0) && (button_down != 0)) (*button_down)(pressed);
+	if ((button_up != 0) && (button_up != 0)) (*button_up) (released);
 }
 
 #ifdef TM1638_FAST_SHIFTOUT && __AVR__
 void Tm1638::fastShiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t val)
 {
-    uint8_t i;
-    uint8_t tmp;
+	uint8_t i;
+	uint8_t tmp;
 
-    for (i = 0; i < 8; i++)  {
-         tmp = !!(val & (1 << i));
-         if ( tmp ){
-            *dataPort |= dataBitMask;
-         } else  {
-            *dataPort &=~ dataBitMask;                              
-         }
-        *clkPort |= clkBitMask;
-        *clkPort &=~ clkBitMask;
-    }
+	for (i = 0; i < 8; i++)  {
+		tmp = !!(val & (1 << i));
+		if (tmp){
+			*dataPort |= dataBitMask;
+		}
+		else  {
+			*dataPort &= ~dataBitMask;
+		}
+		*clkPort |= clkBitMask;
+		*clkPort &= ~clkBitMask;
+	}
 }
 #endif
