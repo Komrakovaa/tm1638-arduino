@@ -1,6 +1,6 @@
 # tm1638-arduino
 TM1638 Board library for Arduino
-![TM1638 LED and KEY board](https://github.com/Komrakovaa/tm1638-arduino/tm1638LED_and_KEY.png)
+![TM1638 LED and KEY board](https://github.com/Komrakovaa/tm1638-arduino/master/tm1638LED_and_KEY.png)
 
 # Introduction
 This library will help you use the TM1638 based LED & Key board.
