@@ -1,0 +1,40 @@
+#######################################
+# Syntax Coloring Map For 
+# TM1638 Board library for Arduino
+#######################################
+
+#######################################
+# Library (KEYWORD1)
+#######################################
+
+Tm1638	KEYWORD1	Tm1638
+tm1638	KEYWORD1	Tm1638
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+display	KEYWORD2
+readKeys	KEYWORD2
+setBrightness	KEYWORD2
+setLED	KEYWORD2
+setChar	KEYWORD2
+displayNum	KEYWORD2
+displayStr	KEYWORD2
+setKeyPressCallback	KEYWORD2
+setKeyReleaseCallback	KEYWORD2
+clearAll	KEYWORD2
+getKeys	KEYWORD2
+
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+TM1638_FAST_SHIFTOUT	LITERAL1
+TM1638_MODE_NORMAL	LITERAL1
+TM1638_MODE_KEY_READ	LITERAL1
+TM1638_MODE_SINGLE	LITERAL1
+TM1638_BRIGHTNESS_OFF	LITERAL1
+TM1638_BRIGHTNESS_BASE	LITERAL1
+TM1638_BRIGHTNESS_DEFAULT	LITERAL1
