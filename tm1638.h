@@ -23,6 +23,7 @@
 #define TM1638_BRIGHTNESS_BASE  0x88
 //Possible values 0..8,   0 - Off
 #define TM1638_BRIGHTNESS_DEFAULT 5
+#define TM1638_WRITE_START_ADDRESS 0xC0
 
 class Tm1638
 {
@@ -40,7 +41,7 @@ public:
 	void setBrightness(uint8_t value);
 	void setLED(uint8_t led, uint8_t value);
 	void setChar(uint8_t pos, char c);
-	void displayNum(uint32_t num);
+	void displayInt(int32_t int_number);
 	void displayStr(const char* str);
 	void setKeyPressCallback(void(*f)(uint8_t));
 	void setKeyReleaseCallback(void(*f)(uint8_t));

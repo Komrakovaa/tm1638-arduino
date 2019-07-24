@@ -67,13 +67,10 @@ void Tm1638::setChar(uint8_t pos, char c){
 	tm1638_reg_data[(pos - 1) * 2] = FONT_DEFAULT[c - 32];
 }
 
-void Tm1638::displayNum(uint32_t num){
+void Tm1638::displayInt( int32_t int_number){
 	char buf[8];
-	sprintf(buf, "%8li", num);
-	for (uint8_t i = 0; i < 8; i++)
-	{
-		setChar(i + 1, buf[i]);
-	}
+	sprintf(buf, "%8li", int_number);
+	displayStr(buf);
 }
 
 void Tm1638::displayStr(const char* str)
@@ -81,18 +78,18 @@ void Tm1638::displayStr(const char* str)
 	uint8_t i;
 	
 	for ( i = 0; i < 8; i++){
-     setChar(i+1,' ');
+        setChar(i+1,' ');
 	}
  
-	for ( i = 0; i < strlen(str); i++){
+	for ( i = 0; (i < strlen(str) && (i < 8)); i++){
 		setChar(i + 1, str[i]);
 	}
 }
 
 void Tm1638::clearAll()
 {
-    for ( uint8_t i = 0; i < 168; i++){
-      tm1638_reg_data[i] = 0;
+    for ( uint8_t i = 0; i < 16; i++){
+        tm1638_reg_data[i] = 0;
     }
 }
 
@@ -126,7 +123,7 @@ uint8_t Tm1638::receive()
 void Tm1638::display() {
 	sendCommand(TM1638_MODE_NORMAL);
 	digitalWrite(stbPin, LOW);
-	shiftOut(dataPin, clkPin, LSBFIRST, 0xC0);
+	shiftOut(dataPin, clkPin, LSBFIRST, TM1638_WRITE_START_ADDRESS);
 	for (uint8_t i = 0; i < 16; i++)
 	{
 #ifdef TM1638_FAST_SHIFTOUT && __AVR__
